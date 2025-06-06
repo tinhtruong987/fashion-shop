@@ -1,0 +1,41 @@
+:host ::ng-deep .p-galleria {
+  .p-galleria-content {
+    border-radius: 0.5rem;
+  }
+
+  .p-galleria-item-wrapper {
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+}
+
+:host ::ng-deep .p-tabview {
+  .p-tabview-nav {
+    background: transparent;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .p-tabview-nav li .p-tabview-nav-link {
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    color: #6b7280;
+    border: none;
+    background: transparent;
+  }
+
+  .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+    color: #4f46e5;
+    border-bottom: 2px solid #4f46e5;
+  }
+}
+
+:host ::ng-deep .p-accordion {
+  .p-accordion-header-link {
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+  }
+
+  .p-accordion-content {
+    padding: 1.5rem;
+  }
+}

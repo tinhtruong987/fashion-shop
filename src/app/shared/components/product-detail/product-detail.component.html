@@ -1,1 +1,259 @@
-<p>product-detail works!</p>
+<div class="container mx-auto px-4 py-8" *ngIf="product$ | async as product">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Product Images -->
+    <div class="col-span-1">
+      <p-galleria
+        [value]="product.images"
+        [numVisible]="4"
+        [circular]="true"
+        [showItemNavigators]="true"
+        [showThumbnails]="true"
+        [showIndicators]="true"
+        [containerClass]="'w-full'"
+        [thumbnailsPosition]="'bottom'"
+      >
+        <ng-template pTemplate="item" let-item>
+          <img
+            [src]="item"
+            [alt]="product.name"
+            class="w-full h-96 object-cover rounded-lg"
+          />
+        </ng-template>
+
+        <ng-template pTemplate="thumbnail" let-item>
+          <img
+            [src]="item"
+            [alt]="product.name"
+            class="w-16 h-16 object-cover rounded"
+          />
+        </ng-template>
+      </p-galleria>
+    </div>
+
+    <!-- Product Info -->
+    <div class="col-span-1">
+      <div class="space-y-6">
+        <!-- Title and Brand -->
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            {{ product.name }}
+          </h1>
+          <p class="text-lg text-gray-600">{{ product.brand }}</p>
+        </div>
+        <!-- Rating and Reviews -->
+        <div class="flex items-center space-x-4">
+          <p-rating
+            [(ngModel)]="product.rating"
+            [readonly]="true"
+            class="text-yellow-400"
+          >
+          </p-rating>
+          <span class="text-sm text-gray-600"
+            >({{ product.reviewCount }} reviews)</span
+          >
+        </div>
+
+        <!-- Price -->
+        <div class="space-y-2">
+          <div class="flex items-center space-x-4">
+            <span class="text-3xl font-bold text-green-600"
+              >${{ product.price }}</span
+            >
+            <span
+              *ngIf="
+                product.originalPrice && product.originalPrice > product.price
+              "
+              class="text-xl text-gray-500 line-through"
+              >${{ product.originalPrice }}</span
+            >
+            <p-tag
+              *ngIf="
+                product.originalPrice && product.originalPrice > product.price
+              "
+              [value]="getDiscountPercentage(product) + '% OFF'"
+              severity="success"
+            >
+            </p-tag>
+          </div>
+          <p class="text-sm text-gray-600">
+            {{ product.stock > 0 ? "In Stock" : "Out of Stock" }}
+          </p>
+        </div>
+
+        <!-- Product Options -->
+        <div class="space-y-4">
+          <!-- Size Selection -->
+          <div *ngIf="product.sizes && product.sizes.length > 0">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Size</label
+            >
+            <div class="flex flex-wrap gap-2">
+              <button
+                *ngFor="let size of product.sizes"
+                (click)="selectedSize = size"
+                [class]="
+                  'px-4 py-2 border rounded-md text-sm font-medium transition-colors ' +
+                  (selectedSize === size
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-600'
+                    : 'border-gray-300 text-gray-700 hover:border-gray-400')
+                "
+              >
+                {{ size }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Color Selection -->
+          <div *ngIf="product.colors && product.colors.length > 0">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Color</label
+            >
+            <div class="flex flex-wrap gap-2">
+              <button
+                *ngFor="let color of product.colors"
+                (click)="selectedColor = color"
+                [class]="
+                  'px-4 py-2 border rounded-md text-sm font-medium transition-colors ' +
+                  (selectedColor === color
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-600'
+                    : 'border-gray-300 text-gray-700 hover:border-gray-400')
+                "
+              >
+                {{ color }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Quantity -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Quantity</label
+            >
+            <p-inputNumber
+              [(ngModel)]="quantity"
+              [min]="1"
+              [max]="product.stock"
+              [showButtons]="true"
+              buttonLayout="horizontal"
+              inputId="quantity"
+              [style]="{ width: '120px' }"
+            >
+            </p-inputNumber>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+          <p-button
+            label="Add to Cart"
+            icon="pi pi-shopping-cart"
+            [disabled]="product.stock === 0"
+            (onClick)="addToCart()"
+            [style]="{ width: '100%' }"
+            severity="info"
+          >
+          </p-button>
+
+          <p-button
+            label="Buy Now"
+            icon="pi pi-credit-card"
+            [disabled]="product.stock === 0"
+            (onClick)="buyNow()"
+            [style]="{ width: '100%' }"
+            severity="success"
+          >
+          </p-button>
+        </div>
+
+        <!-- Product Tags -->
+        <div
+          *ngIf="product.tags && product.tags.length > 0"
+          class="flex flex-wrap gap-2"
+        >
+          <p-tag
+            *ngFor="let tag of product.tags"
+            [value]="tag"
+            severity="secondary"
+          ></p-tag>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Details Tabs -->
+  <div class="mt-12">
+    <p-tabView>
+      <p-tabPanel header="Description">
+        <div class="prose max-w-none">
+          <p class="text-gray-700 leading-relaxed">{{ product.description }}</p>
+        </div>
+      </p-tabPanel>
+
+      <p-tabPanel header="Specifications">
+        <p-accordion>
+          <p-accordionTab header="Product Details">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><strong>Brand:</strong> {{ product.brand }}</div>
+              <div><strong>Category:</strong> {{ product.category }}</div>
+              <div *ngIf="product.material">
+                <strong>Material:</strong> {{ product.material }}
+              </div>
+              <div *ngIf="product.careInstructions">
+                <strong>Care:</strong> {{ product.careInstructions }}
+              </div>
+            </div>
+          </p-accordionTab>
+
+          <p-accordionTab header="Size & Fit">
+            <div *ngIf="product.sizes && product.sizes.length > 0">
+              <p>
+                <strong>Available Sizes:</strong> {{ product.sizes.join(", ") }}
+              </p>
+            </div>
+            <div *ngIf="product.colors && product.colors.length > 0">
+              <p>
+                <strong>Available Colors:</strong>
+                {{ product.colors.join(", ") }}
+              </p>
+            </div>
+          </p-accordionTab>
+
+          <p-accordionTab header="Shipping & Returns">
+            <div class="space-y-2">
+              <p><strong>Free shipping</strong> on orders over $75</p>
+              <p><strong>30-day returns</strong> for unworn items</p>
+              <p><strong>Express delivery</strong> available at checkout</p>
+            </div>
+          </p-accordionTab>
+        </p-accordion>
+      </p-tabPanel>
+
+      <p-tabPanel header="Reviews ({{ product.reviewCount }})">
+        <div class="text-center py-8">
+          <p class="text-gray-600">Reviews coming soon...</p>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="loading$ | async" class="flex justify-center items-center h-64">
+  <i class="pi pi-spinner pi-spin text-4xl text-indigo-600"></i>
+</div>
+
+<!-- Product Not Found -->
+<div
+  *ngIf="!(product$ | async) && !(loading$ | async)"
+  class="text-center py-16"
+>
+  <h2 class="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h2>
+  <p class="text-gray-600 mb-6">
+    The product you're looking for doesn't exist.
+  </p>
+  <p-button
+    label="Back to Products"
+    icon="pi pi-arrow-left"
+    (onClick)="goBack()"
+  ></p-button>
+</div>

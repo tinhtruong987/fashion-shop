@@ -1,1 +1,367 @@
-<p>product-create-edit works!</p>
+<div class="container mx-auto px-4 py-8">
+  <p-toast></p-toast>
+
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+      {{ isEditMode ? "Edit Product" : "Create New Product" }}
+    </h1>
+    <p class="text-gray-600">
+      {{
+        isEditMode
+          ? "Update product information"
+          : "Add a new product to your catalog"
+      }}
+    </p>
+  </div>
+
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="space-y-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Basic Information -->
+      <p-card header="Basic Information" class="h-fit">
+        <div class="space-y-6">
+          <!-- Product Name -->
+          <div>
+            <label
+              for="name"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Product Name *
+            </label>
+            <input
+              pInputText
+              id="name"
+              formControlName="name"
+              placeholder="Enter product name"
+              [class]="
+                'w-full ' +
+                (isFieldInvalid('name') ? 'ng-invalid ng-dirty' : '')
+              "
+            />
+            <small class="text-red-500" *ngIf="isFieldInvalid('name')">
+              {{ getFieldError("name") }}
+            </small>
+          </div>
+
+          <!-- Brand -->
+          <div>
+            <label
+              for="brand"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Brand *
+            </label>
+            <input
+              pInputText
+              id="brand"
+              formControlName="brand"
+              placeholder="Enter brand name"
+              [class]="
+                'w-full ' +
+                (isFieldInvalid('brand') ? 'ng-invalid ng-dirty' : '')
+              "
+            />
+            <small class="text-red-500" *ngIf="isFieldInvalid('brand')">
+              {{ getFieldError("brand") }}
+            </small>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label
+              for="category"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Category *
+            </label>
+            <p-dropdown
+              formControlName="category"
+              [options]="categoryOptions"
+              placeholder="Select category"
+              [style]="{ width: '100%' }"
+              [class]="isFieldInvalid('category') ? 'ng-invalid ng-dirty' : ''"
+            ></p-dropdown>
+            <small class="text-red-500" *ngIf="isFieldInvalid('category')">
+              {{ getFieldError("category") }}
+            </small>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label
+              for="description"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Description *
+            </label>
+            <textarea
+              pInputTextarea
+              id="description"
+              formControlName="description"
+              placeholder="Enter product description"
+              rows="4"
+              [class]="
+                'w-full ' +
+                (isFieldInvalid('description') ? 'ng-invalid ng-dirty' : '')
+              "
+            ></textarea>
+            <small class="text-red-500" *ngIf="isFieldInvalid('description')">
+              {{ getFieldError("description") }}
+            </small>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Pricing & Inventory -->
+      <p-card header="Pricing & Inventory" class="h-fit">
+        <div class="space-y-6">
+          <!-- Price -->
+          <div>
+            <label
+              for="price"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Price *
+            </label>
+            <p-inputNumber
+              formControlName="price"
+              mode="currency"
+              currency="USD"
+              [style]="{ width: '100%' }"
+              [class]="isFieldInvalid('price') ? 'ng-invalid ng-dirty' : ''"
+            ></p-inputNumber>
+            <small class="text-red-500" *ngIf="isFieldInvalid('price')">
+              {{ getFieldError("price") }}
+            </small>
+          </div>
+
+          <!-- Original Price -->
+          <div>
+            <label
+              for="originalPrice"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Original Price
+            </label>
+            <p-inputNumber
+              formControlName="originalPrice"
+              mode="currency"
+              currency="USD"
+              [style]="{ width: '100%' }"
+            ></p-inputNumber>
+            <small class="text-gray-500">Leave empty if no discount</small>
+          </div>
+
+          <!-- Stock -->
+          <div>
+            <label
+              for="stock"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Stock Quantity *
+            </label>
+            <p-inputNumber
+              formControlName="stock"
+              [min]="0"
+              [style]="{ width: '100%' }"
+              [class]="isFieldInvalid('stock') ? 'ng-invalid ng-dirty' : ''"
+            ></p-inputNumber>
+            <small class="text-red-500" *ngIf="isFieldInvalid('stock')">
+              {{ getFieldError("stock") }}
+            </small>
+          </div>
+
+          <!-- Rating & Reviews -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                for="rating"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Rating (0-5)
+              </label>
+              <p-inputNumber
+                formControlName="rating"
+                [min]="0"
+                [max]="5"
+                [step]="0.1"
+                [style]="{ width: '100%' }"
+              ></p-inputNumber>
+            </div>
+
+            <div>
+              <label
+                for="reviewCount"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Review Count
+              </label>
+              <p-inputNumber
+                formControlName="reviewCount"
+                [min]="0"
+                [style]="{ width: '100%' }"
+              ></p-inputNumber>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Product Variants -->
+    <p-card header="Product Variants">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Sizes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Available Sizes
+          </label>
+          <p-multiSelect
+            formControlName="sizes"
+            [options]="sizeOptions"
+            placeholder="Select sizes"
+            [style]="{ width: '100%' }"
+          ></p-multiSelect>
+        </div>
+
+        <!-- Colors -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Available Colors
+          </label>
+          <p-multiSelect
+            formControlName="colors"
+            [options]="colorOptions"
+            placeholder="Select colors"
+            [style]="{ width: '100%' }"
+          ></p-multiSelect>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Product Images -->
+    <p-card header="Product Images">
+      <div class="space-y-4">
+        <!-- File Upload -->
+        <div>
+          <p-fileUpload
+            mode="basic"
+            name="demo[]"
+            chooseLabel="Upload Images"
+            accept="image/*"
+            multiple="true"
+            (onSelect)="onFileSelect($event)"
+            [auto]="false"
+          ></p-fileUpload>
+        </div>
+
+        <p-divider align="center">
+          <span class="text-gray-500">OR</span>
+        </p-divider>
+
+        <!-- Manual Image URLs -->
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <label class="block text-sm font-medium text-gray-700">
+              Image URLs
+            </label>
+            <p-button
+              label="Add URL"
+              icon="pi pi-plus"
+              size="small"
+              (onClick)="addImageUrl()"
+            ></p-button>
+          </div>
+
+          <div formArrayName="images" class="space-y-2">
+            <div
+              *ngFor="let imageControl of imagesArray.controls; let i = index"
+              class="flex gap-2"
+            >
+              <input
+                pInputText
+                [formControlName]="i"
+                placeholder="Enter image URL"
+                class="flex-1"
+              />
+              <p-button
+                icon="pi pi-trash"
+                severity="danger"
+                size="small"
+                (onClick)="removeImageUrl(i)"
+              ></p-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Additional Details -->
+    <p-card header="Additional Details">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Material -->
+        <div>
+          <label
+            for="material"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Material
+          </label>
+          <input
+            pInputText
+            id="material"
+            formControlName="material"
+            placeholder="e.g., 100% Cotton"
+            class="w-full"
+          />
+        </div>
+
+        <!-- Care Instructions -->
+        <div>
+          <label
+            for="careInstructions"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Care Instructions
+          </label>
+          <input
+            pInputText
+            id="careInstructions"
+            formControlName="careInstructions"
+            placeholder="e.g., Machine wash cold"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="mt-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Tags
+        </label>
+        <p-chips
+          formControlName="tags"
+          placeholder="Enter tags and press Enter"
+          [style]="{ width: '100%' }"
+        ></p-chips>
+        <small class="text-gray-500"
+          >Add tags to help customers find this product</small
+        >
+      </div>
+    </p-card>
+
+    <!-- Form Actions -->
+    <div class="flex justify-end space-x-4 pt-6">
+      <p-button
+        label="Cancel"
+        severity="secondary"
+        (onClick)="cancel()"
+      ></p-button>
+
+      <p-button
+        type="submit"
+        [label]="isEditMode ? 'Update Product' : 'Create Product'"
+        icon="pi pi-save"
+        [loading]="loading$ | async"
+      ></p-button>
+    </div>
+  </form>
+</div>

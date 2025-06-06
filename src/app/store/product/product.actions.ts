@@ -1,6 +1,7 @@
 import { createAction, props } from '@ngrx/store';
-import { Product } from './model/product.model';
+import { Product, ProductFilter } from './model/product.model';
 
+// Load Products
 export const loadProducts = createAction('[Product] Load Products');
 export const loadProductsSuccess = createAction(
   '[Product] Load Products Success',
@@ -9,6 +10,32 @@ export const loadProductsSuccess = createAction(
 export const loadProductsFailure = createAction(
   '[Product] Load Products Failure',
   props<{ error: string }>()
+);
+
+// Load Single Product
+export const loadProduct = createAction(
+  '[Product] Load Product',
+  props<{ id: string }>()
+);
+export const loadProductSuccess = createAction(
+  '[Product] Load Product Success',
+  props<{ product: Product }>()
+);
+export const loadProductFailure = createAction(
+  '[Product] Load Product Failure',
+  props<{ error: string }>()
+);
+
+// Filter Products
+export const filterProducts = createAction(
+  '[Product] Filter Products',
+  props<{ filter: ProductFilter }>()
+);
+
+// Search Products
+export const searchProducts = createAction(
+  '[Product] Search Products',
+  props<{ searchTerm: string }>()
 );
 
 export const addProduct = createAction(
@@ -39,13 +66,40 @@ export const updateProductFailure = createAction(
 
 export const deleteProduct = createAction(
   '[Product] Delete Product',
-  props<{ productId: number }>()
+  props<{ productId: string }>()
 );
 export const deleteProductSuccess = createAction(
   '[Product] Delete Product Success',
-  props<{ productId: number }>()
+  props<{ productId: string }>()
 );
 export const deleteProductFailure = createAction(
   '[Product] Delete Product Failure',
   props<{ error: string }>()
 );
+
+// Barrel export for all actions
+export const ProductActions = {
+  loadProducts,
+  loadProductsSuccess,
+  loadProductsFailure,
+  loadProduct,
+  loadProductSuccess,
+  loadProductFailure,
+  searchProducts,
+  searchProductsSuccess: loadProductsSuccess, // Alias
+  searchProductsFailure: loadProductsFailure, // Alias
+  filterProducts,
+  clearFilters: filterProducts, // Alias for now
+  createProduct: addProduct, // Alias for compatibility
+  createProductSuccess: addProductSuccess,
+  createProductFailure: addProductFailure,
+  addProduct,
+  addProductSuccess,
+  addProductFailure,
+  updateProduct,
+  updateProductSuccess,
+  updateProductFailure,
+  deleteProduct,
+  deleteProductSuccess,
+  deleteProductFailure,
+};
