@@ -1,0 +1,26 @@
+:host ::ng-deep {
+  .p-dialog {
+    .p-dialog-content {
+      padding: 1.5rem;
+    }
+  }
+
+  .p-inputtext,
+  .p-dropdown,
+  .p-inputnumber {
+    width: 100%;
+  }
+
+  .aspect-w-1 {
+    position: relative;
+    padding-bottom: 100%;
+  }
+
+  .aspect-w-1 img {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+  }
+}

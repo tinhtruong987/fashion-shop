@@ -1,0 +1,104 @@
+<div class="card">
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">Danh sách danh mục</h2>
+    <button
+      pButton
+      pRipple
+      label="Thêm danh mục"
+      icon="pi pi-plus"
+      routerLink="new"
+      class="p-button-primary"
+    ></button>
+  </div>
+
+  <p-table
+    [value]="categories"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [globalFilterFields]="globalFilterFields"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} categories"
+    [tableStyle]="{ 'min-width': '50rem' }"
+  >
+    <ng-template pTemplate="caption">
+      <div class="flex align-items-center justify-content-between">
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            type="text"
+            (input)="applyFilterGlobal($event, 'contains')"
+            placeholder="Search by name or description"
+          />
+        </span>
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="name">
+          Tên danh mục <p-sortIcon field="name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="description">
+          Mô tả <p-sortIcon field="description"></p-sortIcon>
+        </th>
+        <th pSortableColumn="isActive">
+          Trạng thái <p-sortIcon field="isActive"></p-sortIcon>
+        </th>
+        <th pSortableColumn="createdAt">
+          Ngày tạo <p-sortIcon field="createdAt"></p-sortIcon>
+        </th>
+        <th>Thao tác</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-category>
+      <tr>
+        <td>{{ category.name }}</td>
+        <td>{{ category.description }}</td>
+        <td>
+          <p-tag
+            [severity]="category.isActive ? 'success' : 'danger'"
+            [value]="category.isActive ? 'Active' : 'Inactive'"
+          ></p-tag>
+        </td>
+        <td>{{ category.createdAt | date : "short" }}</td>
+        <td>
+          <div class="flex gap-2">
+            <button
+              pButton
+              pRipple
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-text"
+              pTooltip="Edit"
+              tooltipPosition="top"
+              [routerLink]="[category.categoryID, 'edit']"
+            ></button>
+            <button
+              pButton
+              pRipple
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-text p-button-danger"
+              pTooltip="Delete"
+              tooltipPosition="top"
+              (click)="confirmDelete(category)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="text-center p-4">
+          <p class="text-500">No categories found.</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

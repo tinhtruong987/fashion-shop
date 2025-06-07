@@ -1,0 +1,176 @@
+<div class="p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Quản lý màu sắc</h1>
+    <p-button
+      icon="pi pi-plus"
+      label="Thêm màu"
+      (onClick)="createColor()"
+    ></p-button>
+  </div>
+
+  <p-table
+    [value]="colors"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} màu"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    styleClass="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Tên màu</th>
+        <th>Mã màu</th>
+        <th>Mô tả</th>
+        <th style="width: 100px">Trạng thái</th>
+        <th style="width: 150px">Thao tác</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-color>
+      <tr>
+        <td>{{ color.name }}</td>
+        <td>
+          <div class="flex items-center gap-2">
+            <div
+              class="w-6 h-6 rounded-full border"
+              [style.background-color]="color.hexCode"
+            ></div>
+            <span>{{ color.hexCode }}</span>
+          </div>
+        </td>
+        <td>{{ color.description }}</td>
+        <td>
+          <p-tag [severity]="color.isActive ? 'success' : 'danger'">
+            {{ color.isActive ? "Hoạt động" : "Ngừng hoạt động" }}
+          </p-tag>
+        </td>
+        <td>
+          <div class="flex gap-2">
+            <p-button
+              icon="pi pi-pencil"
+              styleClass="p-button-rounded p-button-text"
+              (onClick)="editColor(color)"
+              pTooltip="Sửa"
+            ></p-button>
+            <p-button
+              icon="pi pi-trash"
+              styleClass="p-button-rounded p-button-text p-button-danger"
+              (onClick)="deleteColor(color)"
+              pTooltip="Xóa"
+            ></p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="text-center p-4">
+          <div class="text-gray-500">Không có màu nào</div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Dialog thêm/sửa màu -->
+<p-dialog
+  [(visible)]="displayDialog"
+  [style]="{ width: '450px' }"
+  [header]="color.colorID === 0 ? 'Thêm màu mới' : 'Sửa thông tin màu'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="colorForm" class="space-y-4">
+    <div class="field">
+      <label for="name" class="block mb-2">Tên màu</label>
+      <input
+        id="name"
+        type="text"
+        pInputText
+        formControlName="name"
+        class="w-full"
+        [ngClass]="{
+          'ng-invalid ng-dirty':
+            colorForm.get('name')?.invalid && colorForm.get('name')?.touched
+        }"
+      />
+      <small
+        class="text-red-500"
+        *ngIf="colorForm.get('name')?.invalid && colorForm.get('name')?.touched"
+      >
+        Tên màu phải có ít nhất 2 ký tự
+      </small>
+    </div>
+
+    <div class="field">
+      <label for="hexCode" class="block mb-2">Mã màu</label>
+      <div class="flex gap-2">
+        <input
+          id="hexCode"
+          type="color"
+          pInputText
+          formControlName="hexCode"
+          class="w-12 h-12 p-1"
+        />
+        <input
+          type="text"
+          pInputText
+          formControlName="hexCode"
+          class="flex-1"
+          [ngClass]="{
+            'ng-invalid ng-dirty':
+              colorForm.get('hexCode')?.invalid &&
+              colorForm.get('hexCode')?.touched
+          }"
+        />
+      </div>
+      <small
+        class="text-red-500"
+        *ngIf="
+          colorForm.get('hexCode')?.invalid && colorForm.get('hexCode')?.touched
+        "
+      >
+        Mã màu không hợp lệ (ví dụ: #FF0000)
+      </small>
+    </div>
+
+    <div class="field">
+      <label for="description" class="block mb-2">Mô tả</label>
+      <textarea
+        id="description"
+        pInputTextarea
+        formControlName="description"
+        [rows]="3"
+        class="w-full"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <p-checkbox
+        formControlName="isActive"
+        [binary]="true"
+        label="Màu đang hoạt động"
+      ></p-checkbox>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      icon="pi pi-times"
+      label="Hủy"
+      styleClass="p-button-text"
+      (onClick)="displayDialog = false"
+    ></p-button>
+    <p-button
+      icon="pi pi-check"
+      label="Lưu"
+      (onClick)="saveColor()"
+      [disabled]="colorForm.invalid"
+    ></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>

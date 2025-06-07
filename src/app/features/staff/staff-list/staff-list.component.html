@@ -1,0 +1,240 @@
+<div class="p-4">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-2xl font-bold">Quản lý nhân viên</h2>
+    <button
+      pButton
+      label="Thêm nhân viên"
+      icon="pi pi-plus"
+      (click)="createStaff()"
+    ></button>
+  </div>
+
+  <p-table
+    [value]="staffList"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} nhân viên"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    styleClass="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Tên nhân viên</th>
+        <th>Chức vụ</th>
+        <th>Tên đăng nhập</th>
+        <th>Email</th>
+        <th>Vai trò</th>
+        <th>Trạng thái</th>
+        <th>Thao tác</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-staff>
+      <tr>
+        <td>{{ staff.name }}</td>
+        <td>{{ staff.position }}</td>
+        <td>{{ staff.userAccount?.username }}</td>
+        <td>{{ staff.userAccount?.email }}</td>
+        <td>
+          {{
+            staff.userAccount?.role === "Admin" ? "Quản trị viên" : "Nhân viên"
+          }}
+        </td>
+        <td>
+          <p-tag
+            [severity]="staff.isActive ? 'success' : 'danger'"
+            [value]="staff.isActive ? 'Hoạt động' : 'Không hoạt động'"
+          >
+          </p-tag>
+        </td>
+        <td>
+          <div class="flex gap-2">
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-text"
+              (click)="editStaff(staff)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-text p-button-danger"
+              (click)="deleteStaff(staff)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-dialog
+    [(visible)]="displayDialog"
+    [style]="{ width: '450px' }"
+    header="Thông tin nhân viên"
+    [modal]="true"
+    styleClass="p-fluid"
+  >
+    <form [formGroup]="staffForm" (ngSubmit)="saveStaff()">
+      <div class="field">
+        <label for="name">Tên nhân viên</label>
+        <input
+          id="name"
+          type="text"
+          pInputText
+          formControlName="name"
+          [ngClass]="{
+            'ng-invalid':
+              staffForm.get('name')?.invalid && staffForm.get('name')?.touched
+          }"
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            staffForm.get('name')?.invalid && staffForm.get('name')?.touched
+          "
+        >
+          Tên nhân viên phải có ít nhất 2 ký tự
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="position">Chức vụ</label>
+        <input
+          id="position"
+          type="text"
+          pInputText
+          formControlName="position"
+          [ngClass]="{
+            'ng-invalid':
+              staffForm.get('position')?.invalid &&
+              staffForm.get('position')?.touched
+          }"
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            staffForm.get('position')?.invalid &&
+            staffForm.get('position')?.touched
+          "
+        >
+          Vui lòng nhập chức vụ
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="username">Tên đăng nhập</label>
+        <input
+          id="username"
+          type="text"
+          pInputText
+          formControlName="username"
+          [ngClass]="{
+            'ng-invalid':
+              staffForm.get('username')?.invalid &&
+              staffForm.get('username')?.touched
+          }"
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            staffForm.get('username')?.invalid &&
+            staffForm.get('username')?.touched
+          "
+        >
+          Tên đăng nhập phải có ít nhất 3 ký tự
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          pInputText
+          formControlName="email"
+          [ngClass]="{
+            'ng-invalid':
+              staffForm.get('email')?.invalid && staffForm.get('email')?.touched
+          }"
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            staffForm.get('email')?.invalid && staffForm.get('email')?.touched
+          "
+        >
+          Email không hợp lệ
+        </small>
+      </div>
+
+      <div class="field" *ngIf="staff.staffID === 0">
+        <label for="password">Mật khẩu</label>
+        <input
+          id="password"
+          type="password"
+          pInputText
+          formControlName="password"
+          [ngClass]="{
+            'ng-invalid':
+              staffForm.get('password')?.invalid &&
+              staffForm.get('password')?.touched
+          }"
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            staffForm.get('password')?.invalid &&
+            staffForm.get('password')?.touched
+          "
+        >
+          Mật khẩu phải có ít nhất 6 ký tự
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="role">Vai trò</label>
+        <p-dropdown
+          id="role"
+          [options]="userRoles"
+          formControlName="role"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Chọn vai trò"
+        ></p-dropdown>
+      </div>
+
+      <div class="field-checkbox">
+        <p-checkbox
+          id="isActive"
+          formControlName="isActive"
+          [binary]="true"
+        ></p-checkbox>
+        <label for="isActive">Hoạt động</label>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        label="Hủy"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="displayDialog = false"
+      ></button>
+      <button
+        pButton
+        pRipple
+        label="Lưu"
+        icon="pi pi-check"
+        class="p-button-text"
+        (click)="saveStaff()"
+        [disabled]="staffForm.invalid"
+      ></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+</div>

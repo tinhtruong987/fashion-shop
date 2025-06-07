@@ -1,0 +1,136 @@
+<div class="p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Quản lý kích thước</h1>
+    <p-button
+      icon="pi pi-plus"
+      label="Thêm kích thước"
+      (onClick)="createSize()"
+    ></p-button>
+  </div>
+
+  <p-table
+    [value]="sizes"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} kích thước"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    styleClass="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Tên kích thước</th>
+        <th>Mô tả</th>
+        <th style="width: 100px">Trạng thái</th>
+        <th style="width: 150px">Thao tác</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-size>
+      <tr>
+        <td>{{ size.name }}</td>
+        <td>{{ size.description }}</td>
+        <td>
+          <p-tag [severity]="size.isActive ? 'success' : 'danger'">
+            {{ size.isActive ? "Hoạt động" : "Ngừng hoạt động" }}
+          </p-tag>
+        </td>
+        <td>
+          <div class="flex gap-2">
+            <p-button
+              icon="pi pi-pencil"
+              styleClass="p-button-rounded p-button-text"
+              (onClick)="editSize(size)"
+              pTooltip="Sửa"
+            ></p-button>
+            <p-button
+              icon="pi pi-trash"
+              styleClass="p-button-rounded p-button-text p-button-danger"
+              (onClick)="deleteSize(size)"
+              pTooltip="Xóa"
+            ></p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="text-center p-4">
+          <div class="text-gray-500">Không có kích thước nào</div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Dialog thêm/sửa kích thước -->
+<p-dialog
+  [(visible)]="displayDialog"
+  [style]="{ width: '450px' }"
+  [header]="
+    size.sizeID === 0 ? 'Thêm kích thước mới' : 'Sửa thông tin kích thước'
+  "
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="sizeForm" class="space-y-4">
+    <div class="field">
+      <label for="name" class="block mb-2">Tên kích thước</label>
+      <input
+        id="name"
+        type="text"
+        pInputText
+        formControlName="name"
+        class="w-full"
+        [ngClass]="{
+          'ng-invalid ng-dirty':
+            sizeForm.get('name')?.invalid && sizeForm.get('name')?.touched
+        }"
+      />
+      <small
+        class="text-red-500"
+        *ngIf="sizeForm.get('name')?.invalid && sizeForm.get('name')?.touched"
+      >
+        Tên kích thước không được để trống
+      </small>
+    </div>
+
+    <div class="field">
+      <label for="description" class="block mb-2">Mô tả</label>
+      <textarea
+        id="description"
+        pInputTextarea
+        formControlName="description"
+        [rows]="3"
+        class="w-full"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <p-checkbox
+        formControlName="isActive"
+        [binary]="true"
+        label="Kích thước đang hoạt động"
+      ></p-checkbox>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      icon="pi pi-times"
+      label="Hủy"
+      styleClass="p-button-text"
+      (onClick)="displayDialog = false"
+    ></p-button>
+    <p-button
+      icon="pi pi-check"
+      label="Lưu"
+      (onClick)="saveSize()"
+      [disabled]="sizeForm.invalid"
+    ></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>

@@ -1,0 +1,122 @@
+<div class="card">
+  <h2 class="mb-4">
+    {{ isEditMode ? "Chỉnh sửa khách hàng" : "Thêm khách hàng mới" }}
+  </h2>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label for="name" class="block mb-2">Tên khách hàng</label>
+          <input
+            id="name"
+            type="text"
+            pInputText
+            formControlName="name"
+            class="w-full"
+            [ngClass]="{
+              'ng-invalid ng-dirty':
+                form.get('name')?.invalid && form.get('name')?.touched
+            }"
+          />
+          <small
+            class="text-red-500"
+            *ngIf="form.get('name')?.invalid && form.get('name')?.touched"
+          >
+            Tên khách hàng là bắt buộc
+          </small>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label for="phone" class="block mb-2">Số điện thoại</label>
+          <input
+            id="phone"
+            type="text"
+            pInputText
+            formControlName="phone"
+            class="w-full"
+            [ngClass]="{
+              'ng-invalid ng-dirty':
+                form.get('phone')?.invalid && form.get('phone')?.touched
+            }"
+          />
+          <small
+            class="text-red-500"
+            *ngIf="form.get('phone')?.invalid && form.get('phone')?.touched"
+          >
+            Số điện thoại không hợp lệ (10 chữ số)
+          </small>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label for="email" class="block mb-2">Email</label>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            class="w-full"
+            [ngClass]="{
+              'ng-invalid ng-dirty':
+                form.get('email')?.invalid && form.get('email')?.touched
+            }"
+          />
+          <small
+            class="text-red-500"
+            *ngIf="form.get('email')?.invalid && form.get('email')?.touched"
+          >
+            Email không hợp lệ
+          </small>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="field">
+          <label for="address" class="block mb-2">Địa chỉ</label>
+          <input
+            id="address"
+            type="text"
+            pInputText
+            formControlName="address"
+            class="w-full"
+            [ngClass]="{
+              'ng-invalid ng-dirty':
+                form.get('address')?.invalid && form.get('address')?.touched
+            }"
+          />
+          <small
+            class="text-red-500"
+            *ngIf="form.get('address')?.invalid && form.get('address')?.touched"
+          >
+            Địa chỉ là bắt buộc
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-4">
+      <button
+        pButton
+        pRipple
+        type="button"
+        label="Hủy"
+        class="p-button-text"
+        [routerLink]="['/admin/customers']"
+      ></button>
+      <button
+        pButton
+        pRipple
+        type="submit"
+        label="Lưu"
+        [loading]="loading"
+        [disabled]="form.invalid || loading"
+      ></button>
+    </div>
+  </form>
+</div>
+
+<p-toast></p-toast>

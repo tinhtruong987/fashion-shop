@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { Router, ActivatedRoute } from '@angular/router';
+import { take } from 'rxjs/operators';
 
 // PrimeNG imports
 import { CardModule } from 'primeng/card';
@@ -20,6 +22,7 @@ import { DataViewModule } from 'primeng/dataview';
 import { TagModule } from 'primeng/tag';
 import { PanelModule } from 'primeng/panel';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
+import { PaginatorModule } from 'primeng/paginator';
 
 import { AppState } from '../../../store/app.state';
 import { Customer } from '../../../store/customer/model/customer.model';
@@ -62,14 +65,114 @@ interface CategoryFilter {
     TagModule,
     PanelModule,
     ScrollPanelModule,
+    PaginatorModule,
     ReceiptComponent,
   ],
   providers: [MessageService],
   template: `
-    <div class="pos-sales-container">
-      <p-toast></p-toast>
+    <!-- All global components outside the main container to avoid z-index conflicts -->
+    <p-toast position="top-right" [baseZIndex]="9999"></p-toast>
 
-      <!-- Ultra Compact Header -->
+    <!-- Customer Dialog moved outside the main container -->
+    <p-dialog
+      header="Thêm khách hàng mới"
+      [(visible)]="showCustomerDialog"
+      [modal]="true"
+      [style]="{ width: '350px' }"
+      [baseZIndex]="9999"
+      styleClass="pos-dialog"
+    >
+      <div class="customer-form">
+        <div class="form-field">
+          <label>Tên khách hàng *</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="newCustomer.name"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-field">
+          <label>Số điện thoại *</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="newCustomer.phone"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-field">
+          <label>Email</label>
+          <input
+            type="email"
+            pInputText
+            [(ngModel)]="newCustomer.email"
+            class="form-input"
+          />
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <div class="dialog-footer">
+          <button class="btn-secondary" (click)="showCustomerDialog = false">
+            Hủy
+          </button>
+          <button
+            class="btn-primary"
+            (click)="addNewCustomer()"
+            [disabled]="!newCustomer.name || !newCustomer.phone"
+          >
+            Lưu
+          </button>
+        </div>
+      </ng-template>
+    </p-dialog>
+
+    <!-- Payment Confirmation Dialog moved outside the main container -->
+    <p-dialog
+      header="Thanh toán thành công"
+      [(visible)]="showPaymentDialog"
+      [modal]="true"
+      [style]="{ width: '400px' }"
+      [baseZIndex]="9999"
+      styleClass="pos-dialog"
+    >
+      <div class="payment-success">
+        <div class="success-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <h4>Giao dịch hoàn tất!</h4>
+
+        <div class="payment-details">
+          <div class="detail-line">
+            <span>Tổng tiền:</span>
+            <span class="amount">{{
+              lastPaymentAmount | currency : 'VND' : 'symbol' : '1.0-0'
+            }}</span>
+          </div>
+          <div class="detail-line">
+            <span>Phương thức:</span>
+            <span>{{ getPaymentMethodLabel(lastPaymentMethod) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <div class="dialog-footer">
+          <button class="btn-secondary" (click)="printReceipt()">
+            <i class="pi pi-print"></i> In hóa đơn
+          </button>
+          <button class="btn-primary" (click)="startNewTransaction()">
+            <i class="pi pi-plus"></i> Giao dịch mới
+          </button>
+        </div>
+      </ng-template>
+    </p-dialog>
+
+    <div class="pos-sales-container">
+      <!-- More compact header -->
       <div class="header-bar">
         <div class="header-left">
           <i class="pi pi-shopping-cart header-icon"></i>
@@ -163,7 +266,7 @@ interface CategoryFilter {
             </div>
           </div>
           <!-- Products Display -->
-          <div class="products-container">
+          <div>
             <!-- Grid View -->
             <div
               class="products-grid"
@@ -208,44 +311,21 @@ interface CategoryFilter {
                 </button>
               </div>
             </div>
-
-            <!-- Pagination for Grid View -->
+            <!-- Pagination for Grid View with PrimeNG Paginator -->
             <div
               class="pagination-section grid-pagination"
-              *ngIf="filteredProducts.length > pageSize && viewMode === 'grid'"
+              *ngIf="filteredProducts.length > 0 && viewMode === 'grid'"
             >
-              <div class="pagination-controls">
-                <button
-                  class="page-btn"
-                  [disabled]="currentPage === 1"
-                  (click)="goToPage(currentPage - 1)"
-                >
-                  <i class="pi pi-chevron-left"></i>
-                </button>
-                <button
-                  class="page-number"
-                  *ngFor="let page of visiblePages"
-                  [class.active]="page === currentPage"
-                  (click)="goToPage(page)"
-                >
-                  {{ page }}
-                </button>
-                <button
-                  class="page-btn"
-                  [disabled]="currentPage === totalPages"
-                  (click)="goToPage(currentPage + 1)"
-                >
-                  <i class="pi pi-chevron-right"></i>
-                </button>
-              </div>
-              <div class="page-size-selector">
-                <span>Hiển thị:</span>
-                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-              </div>
+              <p-paginator
+                [first]="(currentPage - 1) * pageSize"
+                [rows]="pageSize"
+                [totalRecords]="filteredProducts.length"
+                (onPageChange)="onPageChange($event)"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Hiển thị {first} - {last} trong {totalRecords} sản phẩm"
+                styleClass="custom-paginator"
+                [alwaysShow]="true"
+              ></p-paginator>
             </div>
 
             <!-- List View -->
@@ -310,51 +390,21 @@ interface CategoryFilter {
                 </div>
               </div>
             </div>
-
-            <!-- Pagination -->
+            <!-- Pagination with PrimeNG Paginator -->
             <div
               class="pagination-section"
-              *ngIf="filteredProducts.length > pageSize"
+              *ngIf="filteredProducts.length > 0 && viewMode === 'list'"
             >
-              <div class="pagination-info">
-                Hiển thị {{ (currentPage - 1) * pageSize + 1 }} -
-                {{ Math.min(currentPage * pageSize, filteredProducts.length) }}
-                trong {{ filteredProducts.length }} sản phẩm
-              </div>
-              <div class="pagination-controls">
-                <button
-                  class="page-btn"
-                  [disabled]="currentPage === 1"
-                  (click)="goToPage(currentPage - 1)"
-                >
-                  <i class="pi pi-chevron-left"></i>
-                </button>
-
-                <button
-                  class="page-number"
-                  *ngFor="let page of visiblePages"
-                  [class.active]="page === currentPage"
-                  (click)="goToPage(page)"
-                >
-                  {{ page }}
-                </button>
-
-                <button
-                  class="page-btn"
-                  [disabled]="currentPage === totalPages"
-                  (click)="goToPage(currentPage + 1)"
-                >
-                  <i class="pi pi-chevron-right"></i>
-                </button>
-              </div>
-              <div class="page-size-selector">
-                <span>Hiển thị:</span>
-                <select [(ngModel)]="pageSize" (change)="onPageSizeChange()">
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-              </div>
+              <p-paginator
+                [first]="(currentPage - 1) * pageSize"
+                [rows]="pageSize"
+                [totalRecords]="filteredProducts.length"
+                (onPageChange)="onPageChange($event)"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Hiển thị {first} - {last} trong {totalRecords} sản phẩm"
+                styleClass="custom-paginator"
+                [alwaysShow]="true"
+              ></p-paginator>
             </div>
 
             <!-- No Products Message -->
@@ -552,14 +602,15 @@ interface CategoryFilter {
           </div>
         </div>
       </div>
-
       <!-- Customer Dialog -->
       <p-dialog
         header="Thêm khách hàng mới"
         [(visible)]="showCustomerDialog"
         [modal]="true"
         [style]="{ width: '350px' }"
+        [baseZIndex]="9000"
         styleClass="compact-dialog"
+        (onHide)="onDialogHide()"
       >
         <div class="customer-form">
           <div class="form-field">
@@ -608,14 +659,15 @@ interface CategoryFilter {
           </div>
         </ng-template>
       </p-dialog>
-
       <!-- Payment Confirmation Dialog -->
       <p-dialog
         header="Thanh toán thành công"
         [(visible)]="showPaymentDialog"
         [modal]="true"
         [style]="{ width: '400px' }"
+        [baseZIndex]="9000"
         styleClass="compact-dialog"
+        (onHide)="onPaymentDialogHide()"
       >
         <div class="payment-success">
           <div class="success-icon">
@@ -671,33 +723,32 @@ interface CategoryFilter {
       /* Ultra Compact Header */
       .header-bar {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 0.4rem 1rem;
+        padding: 0.25rem 0.75rem;
         border-bottom: 1px solid #e9ecef;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
         position: sticky;
         top: 0;
-        z-index: 30;
-        height: 48px;
-        min-height: 48px;
+        z-index: 5; /* Reduced z-index to avoid overlapping with toasts and dialogs */
+        height: 42px;
+        min-height: 42px;
       }
-
       .header-left {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.35rem;
       }
 
       .header-icon {
         color: #ffffff;
-        font-size: 1.125rem;
+        font-size: 1rem;
       }
 
       .header-title {
         color: #ffffff;
-        font-size: 1rem;
+        font-size: 0.9rem;
         font-weight: 600;
         margin: 0;
       }
@@ -708,23 +759,50 @@ interface CategoryFilter {
       }
 
       ::ng-deep .header-actions .p-button {
-        border-radius: 6px;
-        height: 32px;
-        width: 32px;
+        border-radius: 4px;
+        height: 28px;
+        width: 28px;
         padding: 0;
       }
-
       ::ng-deep .header-actions .p-button:hover {
         background: rgba(255, 255, 255, 0.1);
         color: #ffffff;
       } /* Main Layout */
       .main-layout {
         display: flex;
-        height: calc(100vh - 48px);
+        height: calc(100vh - 42px);
         overflow: hidden;
+      } /* Fix for PrimeNG Toast and Dialog z-index */
+      ::ng-deep .p-toast {
+        z-index: 9999 !important;
+      }
+      ::ng-deep .p-dialog {
+        z-index: 9000 !important;
+        position: relative !important;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23) !important;
       }
 
-      /* Left Panel - Products */
+      ::ng-deep .p-dialog-mask {
+        z-index: 8999 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* Additional fixes for dialog components */
+      ::ng-deep .p-dialog .p-dialog-header {
+        z-index: 9001 !important;
+      }
+
+      ::ng-deep .p-dialog .p-dialog-content {
+        z-index: 9001 !important;
+      }
+
+      ::ng-deep .p-dialog .p-dialog-footer {
+        z-index: 9001 !important;
+      } /* Left Panel - Products */
       .products-panel {
         flex: 2;
         display: flex;
@@ -1072,6 +1150,53 @@ interface CategoryFilter {
         border-radius: 0.25rem;
         background: white;
         font-size: 0.875rem;
+      }
+
+      /* Custom PrimeNG Paginator Styling */
+      .pagination-section {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid #e9ecef;
+        background: #f8f9fa;
+      }
+
+      ::ng-deep .custom-paginator {
+        background: transparent;
+        border: none;
+        padding: 0;
+      }
+
+      ::ng-deep .custom-paginator .p-paginator-page {
+        min-width: 32px;
+        height: 32px;
+        margin: 0 0.125rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+      }
+
+      ::ng-deep .custom-paginator .p-paginator-page.p-highlight {
+        background-color: #2563eb;
+        color: white;
+        border-color: #2563eb;
+      }
+
+      ::ng-deep .custom-paginator .p-paginator-prev,
+      ::ng-deep .custom-paginator .p-paginator-next,
+      ::ng-deep .custom-paginator .p-paginator-first,
+      ::ng-deep .custom-paginator .p-paginator-last {
+        min-width: 32px;
+        height: 32px;
+        border-radius: 0.25rem;
+      }
+
+      ::ng-deep .custom-paginator .p-dropdown {
+        height: 32px;
+        min-width: 60px;
+      }
+
+      ::ng-deep .custom-paginator .p-paginator-current {
+        margin-right: 0.5rem;
+        font-size: 0.875rem;
+        color: #6b7280;
       }
 
       /* Loading and Empty States */
@@ -1806,11 +1931,10 @@ export class SalesPOSComponent implements OnInit {
   selectedCategory: string | null = null;
   filteredProducts: Product[] = [];
   allProducts: Product[] = [];
-
   // View mode and pagination
   viewMode: 'grid' | 'list' = 'list'; // Default to list view for better scalability
   currentPage = 1;
-  pageSize = 50; // Show 50 items per page by default
+  pageSize = 5; // Show 5 items per page as requested
   paginatedProducts: Product[] = [];
   isLoading = false;
   searchDebounceTimer: any;
@@ -1842,11 +1966,13 @@ export class SalesPOSComponent implements OnInit {
   // Receipt
   showReceipt = false;
   currentReceipt: Receipt | null = null;
-
   constructor(
     private store: Store<AppState>,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
+
   ngOnInit() {
     // Initialize observables
     this.products$ = this.store.select(ProductSelectors.selectAllProducts);
@@ -1855,11 +1981,23 @@ export class SalesPOSComponent implements OnInit {
 
     // Load initial data
     this.store.dispatch(ProductActions.loadProducts());
-    this.store.dispatch(CustomerActions.loadCustomers()); // Subscribe to products
-    this.products$.subscribe((products) => {
-      console.log('Loaded products:', products); // Debug log
-      this.allProducts = products;
-      this.filterProducts();
+    this.store.dispatch(CustomerActions.loadCustomers());
+
+    // Subscribe to route params to get page number
+    this.route.params.subscribe((params) => {
+      if (params['page']) {
+        const pageNumber = parseInt(params['page'], 10);
+        if (!isNaN(pageNumber) && pageNumber > 0) {
+          this.currentPage = pageNumber;
+        }
+      }
+
+      // Subscribe to products after getting page number from URL
+      this.products$.subscribe((products) => {
+        console.log('Loaded products:', products); // Debug log
+        this.allProducts = products;
+        this.filterProducts();
+      });
     });
 
     // Show welcome message
@@ -1923,17 +2061,31 @@ export class SalesPOSComponent implements OnInit {
     this.selectedCategory = null;
     this.filterProducts();
   }
-
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
       this.updatePagination();
+
+      // Update URL with new page number
+      this.router.navigate(['/sales/page', page]);
     }
+  }
+
+  onPageChange(event: any) {
+    this.currentPage = Math.floor(event.first / event.rows) + 1;
+    this.pageSize = event.rows;
+    this.updatePagination();
+
+    // Update URL with new page number
+    this.router.navigate(['/sales/page', this.currentPage]);
   }
 
   onPageSizeChange() {
     this.currentPage = 1; // Reset to first page
     this.updatePagination();
+
+    // Update URL to first page when page size changes
+    this.router.navigate(['/sales/page', 1]);
   }
 
   updatePagination() {
@@ -1995,6 +2147,7 @@ export class SalesPOSComponent implements OnInit {
     }, 200);
   }
   addProductToCart(product: Product) {
+    // Kiểm tra sản phẩm có còn hàng không
     if (product.stock <= 0) {
       this.messageService.add({
         severity: 'error',
@@ -2005,40 +2158,54 @@ export class SalesPOSComponent implements OnInit {
       return;
     }
 
-    // Check if product is already in cart and validate stock
-    this.cart$
-      .pipe()
+    // Sử dụng take(1) để chỉ lấy giá trị hiện tại một lần duy nhất
+    this.store
+      .select(POSSelectors.selectCart)
+      .pipe(take(1))
       .subscribe((cart) => {
         const existingItem = cart.find((item) => item.productId === product.id);
-        if (existingItem && existingItem.quantity >= product.stock) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Vượt quá số lượng',
-            detail: `Không thể thêm ${product.name}. Số lượng trong kho chỉ còn ${product.stock}`,
-            life: 4000,
-          });
-          return;
+
+        if (existingItem) {
+          // Kiểm tra số lượng trong kho
+          if (existingItem.quantity >= product.stock) {
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Vượt quá số lượng',
+              detail: `Không thể thêm ${product.name}. Số lượng trong kho chỉ còn ${product.stock}`,
+              life: 4000,
+            });
+            return;
+          }
+
+          // Nếu sản phẩm đã tồn tại trong giỏ hàng, chỉ tăng thêm 1
+          this.store.dispatch(
+            POSActions.updateCartItemQuantity({
+              productId: product.id,
+              quantity: existingItem.quantity + 1,
+            })
+          );
+        } else {
+          // Nếu sản phẩm chưa tồn tại trong giỏ hàng, tạo mới với số lượng là 1
+          const cartItem: CartItem = {
+            productId: product.id,
+            productName: product.name,
+            productImage: product.images?.[0] || '/assets/placeholder.svg',
+            price: product.price,
+            quantity: 1,
+            totalPrice: product.price,
+          };
+
+          this.store.dispatch(POSActions.addToCart({ item: cartItem }));
         }
 
-        const cartItem: CartItem = {
-          productId: product.id,
-          productName: product.name,
-          productImage: product.images?.[0] || '/assets/placeholder.svg',
-          price: product.price,
-          quantity: 1,
-          totalPrice: product.price,
-        };
-
-        this.store.dispatch(POSActions.addToCart({ item: cartItem }));
-
+        // Hiển thị thông báo thành công một lần duy nhất
         this.messageService.add({
           severity: 'success',
           summary: 'Đã thêm vào giỏ',
           detail: `${product.name} đã được thêm vào giỏ hàng`,
           life: 2000,
         });
-      })
-      .unsubscribe();
+      });
   }
 
   quickAddProduct() {
@@ -2117,17 +2284,51 @@ export class SalesPOSComponent implements OnInit {
       }
     }
   }
-
   increaseQuantity(productId: string) {
-    this.store.dispatch(
-      POSActions.updateQuantity({ productId, quantity: 1, isIncrease: true })
-    );
-  }
+    // Lấy số lượng hiện tại và tăng lên 1, sử dụng take(1) để tránh lặp vô hạn
+    this.store
+      .select(POSSelectors.selectCart)
+      .pipe(take(1))
+      .subscribe((cart) => {
+        const existingItem = cart.find((item) => item.productId === productId);
+        if (existingItem) {
+          // Tìm sản phẩm để kiểm tra số lượng kho
+          const product = this.allProducts.find((p) => p.id === productId);
+          if (product && existingItem.quantity >= product.stock) {
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Vượt quá số lượng',
+              detail: `Không thể thêm ${product.name}. Số lượng trong kho chỉ còn ${product.stock}`,
+              life: 4000,
+            });
+            return;
+          }
 
+          this.store.dispatch(
+            POSActions.updateCartItemQuantity({
+              productId,
+              quantity: existingItem.quantity + 1,
+            })
+          );
+        }
+      });
+  }
   decreaseQuantity(productId: string) {
-    this.store.dispatch(
-      POSActions.updateQuantity({ productId, quantity: 1, isIncrease: false })
-    );
+    // Lấy số lượng hiện tại và giảm xuống 1, sử dụng take(1) để tránh lặp vô hạn
+    this.store
+      .select(POSSelectors.selectCart)
+      .pipe(take(1))
+      .subscribe((cart) => {
+        const existingItem = cart.find((item) => item.productId === productId);
+        if (existingItem && existingItem.quantity > 1) {
+          this.store.dispatch(
+            POSActions.updateCartItemQuantity({
+              productId,
+              quantity: existingItem.quantity - 1,
+            })
+          );
+        }
+      });
   }
 
   removeFromCart(productId: string) {
@@ -2391,7 +2592,24 @@ export class SalesPOSComponent implements OnInit {
   // Helper method for stock styling
   getStockClass(stock: number): string {
     if (stock === 0) return 'out-of-stock';
+
     if (stock <= 10) return 'low-stock';
     return 'in-stock';
+  }
+
+  onDialogHide() {
+    // Handle proper closing of the customer dialog
+    if (this.showCustomerDialog) {
+      this.showCustomerDialog = false;
+    }
+    // Reset the new customer object
+    this.newCustomer = { name: '', phone: '', email: '', address: '' };
+  }
+
+  onPaymentDialogHide() {
+    // Handle proper closing of the payment dialog
+    if (this.showPaymentDialog) {
+      this.showPaymentDialog = false;
+    }
   }
 }

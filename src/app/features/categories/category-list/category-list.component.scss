@@ -1,0 +1,41 @@
+:host ::ng-deep {
+  .p-datatable {
+    .p-datatable-header {
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+
+    .p-datatable-thead > tr > th {
+      background: var(--surface-section);
+      color: var(--text-color);
+      font-weight: 600;
+      padding: 1rem;
+    }
+
+    .p-datatable-tbody > tr > td {
+      padding: 1rem;
+    }
+
+    .p-datatable-tbody > tr:hover {
+      background: var(--surface-hover);
+    }
+  }
+
+  .p-button.p-button-text.p-button-danger {
+    color: var(--red-500);
+    &:hover {
+      background: var(--red-50);
+    }
+  }
+
+  .p-dialog {
+    .p-dialog-content {
+      padding: 1.5rem;
+    }
+  }
+
+  .p-inputtext {
+    width: 100%;
+  }
+}

@@ -1,0 +1,98 @@
+<div class="p-6">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <!-- Tổng số sản phẩm -->
+    <p-card header="Tổng số sản phẩm" styleClass="h-full">
+      <div class="text-center">
+        <i class="pi pi-box text-4xl text-blue-500 mb-3"></i>
+        <div class="text-3xl font-bold">{{ totalProducts }}</div>
+        <div class="text-sm text-gray-500">Sản phẩm trong kho</div>
+      </div>
+    </p-card>
+
+    <!-- Tổng số đơn hàng -->
+    <p-card header="Tổng số đơn hàng" styleClass="h-full">
+      <div class="text-center">
+        <i class="pi pi-shopping-cart text-4xl text-green-500 mb-3"></i>
+        <div class="text-3xl font-bold">{{ totalOrders }}</div>
+        <div class="text-sm text-gray-500">Đơn hàng đã xử lý</div>
+      </div>
+    </p-card>
+
+    <!-- Tổng doanh thu -->
+    <p-card header="Tổng doanh thu" styleClass="h-full">
+      <div class="text-center">
+        <i class="pi pi-money-bill text-4xl text-yellow-500 mb-3"></i>
+        <div class="text-3xl font-bold">
+          {{ totalRevenue | currency : "VND" }}
+        </div>
+        <div class="text-sm text-gray-500">Tổng doanh thu</div>
+      </div>
+    </p-card>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Sản phẩm sắp hết hàng -->
+    <p-card header="Sản phẩm sắp hết hàng" styleClass="h-full">
+      <p-table
+        [value]="lowStockProducts"
+        [paginator]="true"
+        [rows]="5"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Mã SP</th>
+            <th>Tên sản phẩm</th>
+            <th>Tồn kho</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-product>
+          <tr>
+            <td>{{ product.productCode }}</td>
+            <td>{{ product.name }}</td>
+            <td>
+              <span class="text-red-500 font-bold">
+                {{ getTotalStock(product) }}
+              </span>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+
+    <!-- Đơn hàng gần đây -->
+    <p-card header="Đơn hàng gần đây" styleClass="h-full">
+      <p-table
+        [value]="recentOrders"
+        [paginator]="true"
+        [rows]="5"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Mã ĐH</th>
+            <th>Ngày</th>
+            <th>Tổng tiền</th>
+            <th>Trạng thái</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-order>
+          <tr>
+            <td>#{{ order.orderID }}</td>
+            <td>{{ order.orderDate | date : "short" }}</td>
+            <td>{{ order.totalAmount | currency : "VND" }}</td>
+            <td>
+              <p-tag
+                [severity]="
+                  order.status === 'Completed' ? 'success' : 'warning'
+                "
+              >
+                {{ order.status }}
+              </p-tag>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+</div>

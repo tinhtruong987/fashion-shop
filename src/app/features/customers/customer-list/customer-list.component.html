@@ -1,0 +1,201 @@
+<div class="p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Quản lý khách hàng</h1>
+    <p-button
+      icon="pi pi-plus"
+      label="Thêm khách hàng"
+      (onClick)="createCustomer()"
+    ></p-button>
+  </div>
+
+  <p-table
+    [value]="customers"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Hiển thị {first} đến {last} của {totalRecords} khách hàng"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    styleClass="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Tên khách hàng</th>
+        <th>Số điện thoại</th>
+        <th>Email</th>
+        <th>Điểm tích lũy</th>
+        <th style="width: 100px">Trạng thái</th>
+        <th style="width: 150px">Thao tác</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-customer>
+      <tr>
+        <td>{{ customer.name }}</td>
+        <td>{{ customer.phone }}</td>
+        <td>{{ customer.email }}</td>
+        <td>{{ customer.loyaltyPoints }}</td>
+        <td>
+          <p-tag [severity]="customer.isActive ? 'success' : 'danger'">
+            {{ customer.isActive ? "Hoạt động" : "Ngừng hoạt động" }}
+          </p-tag>
+        </td>
+        <td>
+          <div class="flex gap-2">
+            <p-button
+              icon="pi pi-history"
+              styleClass="p-button-rounded p-button-text"
+              (onClick)="viewCustomerHistory(customer)"
+              pTooltip="Lịch sử mua hàng"
+            ></p-button>
+            <p-button
+              icon="pi pi-pencil"
+              styleClass="p-button-rounded p-button-text"
+              (onClick)="editCustomer(customer)"
+              pTooltip="Sửa"
+            ></p-button>
+            <p-button
+              icon="pi pi-trash"
+              styleClass="p-button-rounded p-button-text p-button-danger"
+              (onClick)="deleteCustomer(customer)"
+              pTooltip="Xóa"
+            ></p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="text-center p-4">
+          <div class="text-gray-500">Không có khách hàng nào</div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Dialog thêm/sửa khách hàng -->
+<p-dialog
+  [(visible)]="displayDialog"
+  [style]="{ width: '450px' }"
+  [header]="
+    customer.customerID === 0
+      ? 'Thêm khách hàng mới'
+      : 'Sửa thông tin khách hàng'
+  "
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="customerForm" class="space-y-4">
+    <div class="field">
+      <label for="name" class="block mb-2">Tên khách hàng</label>
+      <input
+        id="name"
+        type="text"
+        pInputText
+        formControlName="name"
+        class="w-full"
+        [ngClass]="{
+          'ng-invalid ng-dirty':
+            customerForm.get('name')?.invalid &&
+            customerForm.get('name')?.touched
+        }"
+      />
+      <small
+        class="text-red-500"
+        *ngIf="
+          customerForm.get('name')?.invalid && customerForm.get('name')?.touched
+        "
+      >
+        Tên khách hàng phải có ít nhất 2 ký tự
+      </small>
+    </div>
+
+    <div class="field">
+      <label for="phone" class="block mb-2">Số điện thoại</label>
+      <input
+        id="phone"
+        type="text"
+        pInputText
+        formControlName="phone"
+        class="w-full"
+        [ngClass]="{
+          'ng-invalid ng-dirty':
+            customerForm.get('phone')?.invalid &&
+            customerForm.get('phone')?.touched
+        }"
+      />
+      <small
+        class="text-red-500"
+        *ngIf="
+          customerForm.get('phone')?.invalid &&
+          customerForm.get('phone')?.touched
+        "
+      >
+        Số điện thoại không hợp lệ
+      </small>
+    </div>
+
+    <div class="field">
+      <label for="email" class="block mb-2">Email</label>
+      <input
+        id="email"
+        type="email"
+        pInputText
+        formControlName="email"
+        class="w-full"
+        [ngClass]="{
+          'ng-invalid ng-dirty':
+            customerForm.get('email')?.invalid &&
+            customerForm.get('email')?.touched
+        }"
+      />
+      <small
+        class="text-red-500"
+        *ngIf="
+          customerForm.get('email')?.invalid &&
+          customerForm.get('email')?.touched
+        "
+      >
+        Email không hợp lệ
+      </small>
+    </div>
+
+    <div class="field">
+      <label for="address" class="block mb-2">Địa chỉ</label>
+      <textarea
+        id="address"
+        pInputTextarea
+        formControlName="address"
+        [rows]="3"
+        class="w-full"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <p-checkbox
+        formControlName="isActive"
+        [binary]="true"
+        label="Khách hàng đang hoạt động"
+      ></p-checkbox>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      icon="pi pi-times"
+      label="Hủy"
+      styleClass="p-button-text"
+      (onClick)="displayDialog = false"
+    ></p-button>
+    <p-button
+      icon="pi pi-check"
+      label="Lưu"
+      (onClick)="saveCustomer()"
+      [disabled]="customerForm.invalid"
+    ></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>

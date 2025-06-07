@@ -1,0 +1,25 @@
+:host ::ng-deep {
+  .field {
+    margin-bottom: 1.5rem;
+
+    label {
+      color: var(--text-color);
+      font-weight: 500;
+    }
+
+    input {
+      &.ng-invalid.ng-dirty {
+        border-color: var(--red-500);
+      }
+    }
+
+    small {
+      display: block;
+      margin-top: 0.25rem;
+    }
+  }
+
+  .p-button {
+    min-width: 100px;
+  }
+}

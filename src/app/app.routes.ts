@@ -79,12 +79,12 @@ export const routes: Routes = [
       { path: '', redirectTo: 'products', pathMatch: 'full' },
     ],
   },
-
   // Sales Routes
   {
     path: 'sales',
     children: [
       { path: '', component: SalesPOSComponent },
+      { path: 'page/:page', component: SalesPOSComponent },
       { path: 'dashboard', component: SalesDashboardComponent },
       { path: 'pos', component: POSComponent }, // Keep old POS for reference
     ],
